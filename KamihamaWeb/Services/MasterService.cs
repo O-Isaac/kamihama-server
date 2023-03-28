@@ -296,10 +296,10 @@ namespace KamihamaWeb.Services
         /// <returns>Boolean</returns>
         public async Task<bool> IsUpdateRequired()
         {
-            var versionCacheFile = await File.ReadAllTextAsync("version_cache");
+            var versionCacheFile = await File.ReadAllTextAsync("version_cache.json");
             dynamic versionCache = JsonConvert.DeserializeObject(versionCacheFile);
             var version = int.Parse(versionCache["version"].replace(".", ""));
-            
+
             return version != null && AssetsCurrentVersion < version;
         }
 
