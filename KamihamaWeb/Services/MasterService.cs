@@ -92,15 +92,22 @@ namespace KamihamaWeb.Services
             Log.Information("Updating master lists.");
             UpdateIsRunning = true;
 
-
             Log.Information("Fetching current asset version...");
-            var masterJson = await _rest.GetMasterJson<MasterJsonConfig>(_config["MagiRecoServer:AssetVersion"]);
-            if (masterJson != null)
+            // var masterJson = await _rest.GetMasterJson<MasterJsonConfig>(_config["MagiRecoServer:AssetVersion"]);
+            // if (masterJson != null)
+            // {
+            //     Log.Information($"Asset version: {masterJson.version}");
+            //     AssetsCurrentVersion = masterJson.version;
+            // }
+            
+            var version = await RestSharpClient.GetLatestVersion();
+            if (version != null)
             {
-                Log.Information($"Asset version: {masterJson.version}");
-                AssetsCurrentVersion = masterJson.version;
-            }
+                var versionNumber = int.Parse(version.Replace(".", ""));
 
+                Log.Information($"Asset version: {versionNumber}");
+                AssetsCurrentVersion = versionNumber;
+            }
 
             var workGamedataAssets = new Dictionary<string, List<GamedataAsset>>();
             foreach (var assetToMod in ModdedAssetLists)
@@ -235,11 +242,21 @@ namespace KamihamaWeb.Services
             while (true)
             {
                 Log.Information("Fetching current asset version...");
-                var masterJson = await _rest.GetMasterJson<MasterJsonConfig>(_config["MagiRecoServer:AssetVersion"]);
-                if (masterJson != null)
+                
+                // var masterJson = await _rest.GetMasterJson<MasterJsonConfig>(_config["MagiRecoServer:AssetVersion"]);
+                // if (masterJson != null)
+                // {
+                //     Log.Information($"Asset version: {masterJson.version}");
+                //     AssetsCurrentVersion = masterJson.version;
+                //     break;
+                // }
+                
+                var version = await RestSharpClient.GetLatestVersion();
+                if (version != null)
                 {
-                    Log.Information($"Asset version: {masterJson.version}");
-                    AssetsCurrentVersion = masterJson.version;
+                    var versionNumber = int.Parse(version.Replace(".", ""));
+                    Log.Information($"Asset version: {versionNumber}");
+                    AssetsCurrentVersion = versionNumber;
                     break;
                 }
 
@@ -251,8 +268,9 @@ namespace KamihamaWeb.Services
                 delay *= 2;
             }
 
+            await MasterListBuilder.GenerateCacheVersion();
             var lists = await _builder.GenerateEnglishAssetList();
-
+            
             if (lists != null)
             {
                 EnglishMasterAssets = lists;
@@ -278,8 +296,11 @@ namespace KamihamaWeb.Services
         /// <returns>Boolean</returns>
         public async Task<bool> IsUpdateRequired()
         {
-            var masterJson = await _rest.GetMasterJson<MasterJsonConfig>(_config["MagiRecoServer:AssetVersion"]);
-            return masterJson != null && AssetsCurrentVersion < masterJson.version;
+            var versionCacheFile = await File.ReadAllTextAsync("version_cache");
+            dynamic versionCache = JsonConvert.DeserializeObject(versionCacheFile);
+            var version = int.Parse(versionCache["version"].replace(".", ""));
+            
+            return version != null && AssetsCurrentVersion < version;
         }
 
         /// <summary>

@@ -37,6 +37,18 @@ namespace KamihamaWeb.Services
 
         private string StaticDirectory { get; set; } = "MagiRecoStatic/";
 
+        public static async Task<string> GenerateCacheVersion()
+        {
+            var version = await RestSharpClient.GetLatestVersion();
+            var obj = new { version };
+            var jsonString = JsonConvert.SerializeObject(obj);
+           
+            await File.WriteAllTextAsync("version_cache.json", jsonString);
+            Log.Information($"Written new version {version}");
+            
+            return version;
+        }
+
         public async Task<Dictionary<string, GamedataAsset>> GenerateEnglishAssetList()
         {
             if (File.Exists("en_cache.json"))

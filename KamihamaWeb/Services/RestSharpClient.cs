@@ -72,6 +72,18 @@ namespace KamihamaWeb.Services
             return result.Content;
         }
 
+        public static async Task<string> GetLatestVersion()
+        {
+            // Must make worker using 
+            // https://github.com/atlasacademy/gplay_version_getter
+            // This for test
+            var client = new RestClient("https://gplay-ver.atlasacademy.workers.dev/?id=com.aniplex.magireco");
+            var request = new RestRequest("/", Method.GET);
+            var response = await client.ExecuteAsync(request);
+
+            return response.Content;
+        }
+
         public async Task<DiskCacheItem> FetchAsset(string item)
         {
             var request = new RestRequest("resource/" + item, Method.GET);
